@@ -49,7 +49,7 @@ func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// hash password
-	if hash, err := hashPass(usr.Password); err != nil {
+	if hash, err := hashPass(usr.Hash); err != nil {
 		http.Error(rw, "Hashing of password failed", http.StatusBadRequest)
 		return
 	} else {

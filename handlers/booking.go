@@ -7,7 +7,7 @@ import (
 	"bookings.com/m/data"
 )
 
-// create a Bookings struct to enable addition of a logger.
+// create a Bookings struct to enable dependency injection of a logger.
 type Bookings struct {
 	l *log.Logger
 }
@@ -37,6 +37,9 @@ func (b *Bookings) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
+// getBookings can be called on a Bookings object and takes an http ResponseWriter and Request as parameters.
+// This function is responsible for handling GET requests for bookings.
+// It calls functions "GetBookings" and "ToJSON" from the booking data file to retrieve and encode the data to be presented to the user.
 func (b *Bookings) getBookings(rw http.ResponseWriter, r *http.Request) {
 	b.l.Println("Handling GET request")
 
@@ -48,6 +51,10 @@ func (b *Bookings) getBookings(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// addBooking can be called on a Bookings object and takes an http ResponseWriter and Request as parameters.
+// This function is responsible for handling POST requests for bookings.
+// It calls the function "FromJSON" from the booking data file to decode the data being passed by the user.
+// The decoded data is then passed to the function AddBookking from the booking data file to add the file to the bookingList.
 func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request) {
 	b.l.Println("Handling POST request")
 
@@ -55,7 +62,7 @@ func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request) {
 
 	err := book.FromJSON(r.Body)
 	if err != nil {
-		// http.Error(rw, "Unable to Marshal JSON FUCK OFF", http.StatusBadRequest)
+		http.Error(rw, "Unable to Marshal JSON", http.StatusBadRequest)
 	}
 
 	b.l.Printf("Booking: %#v", book)

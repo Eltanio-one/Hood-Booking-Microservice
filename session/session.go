@@ -18,18 +18,18 @@ func GenerateSecureToken(length int) (string, error) {
 	}
 }
 
-func AuthenticateToken(rw http.ResponseWriter, r *http.Request, ID int) bool {
+func AuthenticateToken(rw http.ResponseWriter, r *http.Request) string {
 	token, err := RetrieveCookie(r)
 	if err != nil {
-		http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
-		return false
+		return ""
 	}
-	returnID := userTokenAuthentication(token)
-	if ID == returnID {
-		return true
-	} else {
-		return false
-	}
+	return token
+	// returnID := userTokenAuthentication(token)
+	// if ID == returnID {
+	// 	return true
+	// } else {
+	// 	return false
+	// }
 }
 
 func userTokenAuthentication(token string) int {

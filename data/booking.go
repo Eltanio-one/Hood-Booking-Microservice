@@ -7,8 +7,11 @@ import (
 	"time"
 )
 
-type Bookings []*Booking
-
+// Booking is the struct that contains the fields defining a booking.
+// This includes;
+// the user ID of the user that booked the slot,
+// the ID of the hood that was booked,
+// the time and date of the booking.
 type Booking struct {
 	ID             int       `json:"id"`
 	User_ID        int       `json:"user_id"`
@@ -16,13 +19,17 @@ type Booking struct {
 	Booking_Date   time.Time `json:"booking_time"`
 }
 
+// BookingsList is a type defined to characterise an array of the Booking struct type variables.
+// This is mainly used for defining the temporary booking list, and also in GET requests of bookings where the bookingList is queried.
+type BookingsList []*Booking
+
 // GetBookings returns the bookinglist above.
 // This bookingList is to be used as a test for HTTP requests while the database is not linked.
-func GetBookings() Bookings {
+func GetBookings() BookingsList {
 	return bookingList
 }
 
-// FromJSON can be used on Bookings type variables.
+// FromJSON can be used on Booking type variables.
 // It takes in an io.Writer parameter, and instantiates a decoder that writes to the io.Writer.
 // Uses the decoder to dencode the Bookings type the function is called on.
 func (b *Booking) FromJSON(r io.Reader) error {
@@ -33,22 +40,27 @@ func (b *Booking) FromJSON(r io.Reader) error {
 // ToJSON can be used on Bookings type variables.
 // It takes in an io.Writer parameter, and instantiates an encoder that writes to the io.Writer.
 // Uses the encoder to encode the Bookings type the function is called on.
-func (b *Bookings) ToJSON(w io.Writer) error {
+func (b *BookingsList) ToJSON(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	return enc.Encode(b)
 }
 
+// AddBooking takes in a Booking struct, and is used to add the passed struct to the temporary bookingList (this will be deprecated once connected to a database).
+// The function calls a secondary helper function, GetNextBookingId, see below for details.
 func AddBooking(b *Booking) {
 	b.ID = GetNextBookingID()
 	bookingList = append(bookingList, b)
 }
 
+// GetNextBookingID is used to find the next numerical ID number and returns an integer of that value.
+// Using the length of the bookingList, it finds the ID of the last added booking and returns that value plus 1.
 func GetNextBookingID() int {
 	lastBooking := bookingList[len(bookingList)-1]
 	return lastBooking.ID + 1
 }
 
-var bookingList = []*Booking{
+// bookingList is a temporary list of bookings used for testing purposes, that will be deprecated once a database is incorporated into this project.
+var bookingList = BookingsList{
 	{
 		ID:             1,
 		User_ID:        1,

@@ -11,18 +11,17 @@ type Users []*User
 type User struct {
 	ID                  int    `json:"id"`
 	Name                string `json:"name"`
-	Password            string `json:"password"`
 	Hash                string `json:"hash"`
 	Email               string `json:"email"`
 	Emergency_Telephone int    `json:"emergency_telephone"`
 	Research_Group      string `json:"research_group"`
 }
 
-var UserList = []*User{
+var UserList = Users{
 	{
 		ID:                  1,
 		Name:                "Dan Haver",
-		Password:            "test123",
+		Hash:                "test123",
 		Email:               "dan.haver@ANRI.net",
 		Emergency_Telephone: 07712345677,
 		Research_Group:      "Immunotherapy",
@@ -30,7 +29,7 @@ var UserList = []*User{
 	{
 		ID:                  2,
 		Name:                "Warren Patterson",
-		Password:            "test321",
+		Hash:                "test321",
 		Email:               "warren.patterson@ANRI.net",
 		Emergency_Telephone: 07727654323,
 		Research_Group:      "Immunogenetics",

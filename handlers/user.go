@@ -27,6 +27,11 @@ func NewUserHandler(l *log.Logger) *Users {
 func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
+		// token := session.AuthenticateToken(rw, r)
+		// if token == "" {
+		// 	http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
+		// 	return
+		// }
 		u.getUsers(rw, r)
 		return
 	}

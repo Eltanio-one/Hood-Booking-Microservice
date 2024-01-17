@@ -58,7 +58,7 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Invalid username", http.StatusBadRequest)
 		return
 	}
-	if err = comparePasswords(matchedUser.Hash, usr.Password); err != nil {
+	if err = comparePasswords(matchedUser.Hash, usr.Hash); err != nil {
 		http.Error(rw, "Incorrect password", http.StatusBadRequest)
 		return
 	}
