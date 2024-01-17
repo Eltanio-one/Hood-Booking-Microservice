@@ -1,0 +1,103 @@
+package handlers
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"reflect"
+
+	"bookings.com/m/data"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type Registers struct {
+	l *log.Logger
+}
+
+func NewRegisterHandler(l *log.Logger) *Registers {
+	return &Registers{l}
+}
+
+func (reg *Registers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodPost {
+		reg.register(rw, r)
+		return
+	}
+}
+
+func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
+	reg.l.Println("Registering new user...")
+
+	// attempt to decode request body into new user struct
+	usr := &data.User{}
+	if err := json.NewDecoder(r.Body).Decode(usr); err != nil {
+		http.Error(rw, "Unable to unmarshal JSON", http.StatusBadRequest)
+		return
+	}
+
+	// check for missing data in registration request
+	if result := checkMissingValues(usr); result == false {
+		http.Error(rw, "Please ensure there is no missing data entered", http.StatusBadRequest)
+		return
+	}
+
+	// need to check user of same name doesn't exist
+	if nameCheck := checkExistingUser(usr); nameCheck == true {
+		http.Error(rw, "A user with that name already exists, ensure you don't already have an account", http.StatusBadRequest)
+		return
+	}
+
+	// hash password
+	if hash, err := hashPass(usr.Password); err != nil {
+		http.Error(rw, "Hashing of password failed", http.StatusBadRequest)
+		return
+	} else {
+		usr.Hash = hash
+	}
+
+	// add new user to the UserList
+	data.AddUser(usr)
+
+	reg.l.Println("Registration complete!")
+}
+
+// checkMissingValues ensures that the user has entered all required data for registration.
+// The function takes the previously created User struct as a pointer.
+// The user struct is then dereferenced to allow the use of reflect.NumField() to calculate the number of fields within the struct.
+// The user should have supplied 5/6 fields, with the hash being blank as this will be generated later in the registration request.
+// If the count of missing values is 1, then no data is missing and the function returns true to enable continuation of the request.
+func checkMissingValues(u *data.User) bool {
+	var count int
+
+	vals := reflect.ValueOf(u).Elem()
+
+	for i := 0; i < vals.NumField(); i++ {
+		if fieldValue := vals.Field(i); fieldValue.IsZero() == true {
+			count++
+		}
+	}
+	return count == 1
+}
+
+// checkExistingUser queries the UserList to make sure that a use wth the same name provided at registration doesn't exist.
+// As there are a small and limited number of employees who would use this microservice, using name as an identifier of duplicate registrations is fair.
+// If a user with the same name as the one provided during the current registration request exists, true is returned.
+func checkExistingUser(u *data.User) bool {
+	for _, usr := range data.UserList {
+		if u.Name == usr.Name {
+			return true
+		}
+	}
+	return false
+}
+
+// hashPass takes in the user's inputted password, and returns a hashed version of the password and an error.
+// This function uses bcrypt to hash the password.
+func hashPass(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
