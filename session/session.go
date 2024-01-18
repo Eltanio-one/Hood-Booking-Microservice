@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var SessionCookies = make(map[string]int)
+var SessionTokens = make(map[string]int)
 
 func GenerateSecureToken(length int) (string, error) {
 	b := make([]byte, length)
@@ -33,7 +33,7 @@ func AuthenticateToken(rw http.ResponseWriter, r *http.Request) string {
 }
 
 func userTokenAuthentication(token string) int {
-	id, ok := SessionCookies[token]
+	id, ok := SessionTokens[token]
 	if ok {
 		return id
 	}

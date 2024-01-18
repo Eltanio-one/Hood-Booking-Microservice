@@ -7,21 +7,21 @@ import (
 	"bookings.com/m/data"
 )
 
-// create a Hoods struct to enable addition of a logger.
+// Hoods struct is created to enable dependency injection of a logger.
 type Hoods struct {
 	l *log.Logger
 }
 
-// NewBookingHandler takes a logger object and returns a Bookings object.
-// The logger passed will be assigned to the Bookings object logger field.
-// This function is used in the main() function to return the Bookings handler that is required to pass to the created servemux.
+// NewHoodHandler takes a logger object and returns a Hoods object.
+// The logger passed will be assigned to the Hoods object logger field.
+// This function is used in the main() function to return the Hoods handler that is required to pass to the created servemux.
 func NewHoodHandler(l *log.Logger) *Hoods {
 	return &Hoods{l}
 }
 
-// ServeHTTP is called on a Bookings object.
+// ServeHTTP is called on a Hoods object.
 // It takes an http ResponseWriter and Request as parameters.
-// This function deals with all HTTP request methods that are queried.
+// This function deals with all HTTP request methods that are queried, so far GET and POST requests are handled.
 func (h *Hoods) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
@@ -37,17 +37,26 @@ func (h *Hoods) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
+// getHoods is called on a Hoods object and takes an http ResponseWriter and Request as parameters.
+// This function is responsible for handling GET requests for Hoods.
+// It calls functions "GetHoods" and "ToJSON" from the booking data file to retrieve and encode the data to be presented to the user.
 func (h *Hoods) getHoods(rw http.ResponseWriter, r *http.Request) {
 	h.l.Println("Handling GET request for hoods")
 
+	// retrieve hoodList
 	hoodList := data.GetHoods()
 
+	// encode data
 	err := hoodList.ToJSON(rw)
 	if err != nil {
 		http.Error(rw, "Unable to Marshal JSON", http.StatusInternalServerError)
 	}
 }
 
+// addHood is called on a Hoods struct object and takes an HTTP ResponseWriter and Request as parameters.
+// This function is responsible for handling POST requests for Hoods.
+// It calls the function "FromJSON" from the Hood data file to decode the data being passed by the user.
+// The decoded data is then passed to the function AddHood from the Hood data file to add the file to the hoodList.
 func (h *Hoods) addHood(rw http.ResponseWriter, r *http.Request) {
 	h.l.Println("Handling POST request for hoods")
 
@@ -55,31 +64,9 @@ func (h *Hoods) addHood(rw http.ResponseWriter, r *http.Request) {
 
 	err := hd.FromJSON(r.Body)
 	if err != nil {
-		// http.Error(rw, "Unable to Marshal JSON FUCK OFF", http.StatusBadRequest)
+		http.Error(rw, "Unable to Marshal JSON", http.StatusBadRequest)
 	}
 
 	h.l.Printf("Hood: %#v", hd)
 	data.AddHood(hd)
-}
-
-func (h *Hoods) updateUsers(id int, rw http.ResponseWriter, r *http.Request) {
-	h.l.Println("Handle PUT request for hood")
-
-	hd := &data.Hood{}
-
-	err := hd.FromJSON(r.Body)
-	if err != nil {
-		http.Error(rw, "Unable to unmarshal JSON", http.StatusBadRequest)
-	}
-
-	err = data.UpdateHood(id, hd)
-	if err == data.ErrHoodNotFound {
-		http.Error(rw, "Hood not found", http.StatusBadRequest)
-		return
-	}
-
-	if err != nil {
-		http.Error(rw, "Hood not found", http.StatusInternalServerError)
-		return
-	}
 }

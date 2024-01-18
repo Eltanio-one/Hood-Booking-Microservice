@@ -10,22 +10,36 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Registers is a instantiated as a struct to allow dependency injection of a logger.
 type Registers struct {
 	l *log.Logger
 }
 
+// NewRegisterHandler takes a logger as a parameter and returns a Registers struct that is assigned that logger.
+// This function is used in the main() function to allow user registration.
 func NewRegisterHandler(l *log.Logger) *Registers {
 	return &Registers{l}
 }
 
+// ServeHTTP is called on Registers objects and takes an http ResponseWriter and Request as parameters.
+// For registration, only POST http requests are handled. An http.StatusMethodNotAllowed is passed to the ResponseWriter if any other request types are performed.
 func (reg *Registers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		reg.register(rw, r)
 		return
 	}
+
+	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
+// register is called on Registers strut objects and takes an http ResponseWriter and Request as parameters.
+// This function is used to authenticate the data that is provided by the user during registration and then add the user to the userList to enable login.
+// In order, the data provided in the request body is decoded into a newly instantiated User object.
+// checkMissingValues ensure the user has no left any required field empty.
+// checkExistingUser ensures that a user with the same name doesn't already exist (due to the small number of people who will be using the API, using the name as an identifier is permissible).
+// hashPass hashes the users provided password using the bcrypt package.
+// The user is then added to the userList to enable authentication during login.
 func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
 	reg.l.Println("Registering new user...")
 

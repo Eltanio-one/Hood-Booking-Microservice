@@ -30,8 +30,8 @@ func GetBookings() BookingsList {
 }
 
 // FromJSON can be used on Booking type variables.
-// It takes in an io.Writer parameter, and instantiates a decoder that writes to the io.Writer.
-// Uses the decoder to dencode the Bookings type the function is called on.
+// It takes in an io.Reader parameter, and instantiates a decoder that writes to the io.Reader.
+// Uses the json decoder to decode the data stored in the io.Reader and store this data in the booking object.
 func (b *Booking) FromJSON(r io.Reader) error {
 	dec := json.NewDecoder(r)
 	return dec.Decode(b)
@@ -39,7 +39,7 @@ func (b *Booking) FromJSON(r io.Reader) error {
 
 // ToJSON can be used on Bookings type variables.
 // It takes in an io.Writer parameter, and instantiates an encoder that writes to the io.Writer.
-// Uses the encoder to encode the Bookings type the function is called on.
+// Uses the json encoder to encode the data stored in the io.Writer and store this data in the booking object.
 func (b *BookingsList) ToJSON(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	return enc.Encode(b)
