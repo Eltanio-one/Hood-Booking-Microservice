@@ -69,7 +69,7 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Failed to generate secure token", http.StatusBadRequest)
 		return
 	}
-	session.SessionCookies[token] = matchedUser.ID
+	session.SessionTokens[token] = matchedUser.ID
 	session.StoreCookie(rw, token)
 	l.l.Println("User successfully logged in, welcome", matchedUser.Name)
 }

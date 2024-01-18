@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+type Hoods []*Hood
+
 // Hood struct created with necessary information to identify each hood.
 type Hood struct {
 	ID          int    `json:"id"`
@@ -76,7 +78,7 @@ func GetNextHoodID() int {
 // }
 
 // hoodList is a temporary list of users used for testing purposes, that will be deprecated once a database is incorporated into this project.
-var hoodList = HoodsList{
+var hoodList = Hoods{
 	{
 		ID:          1,
 		Hood_Number: 101,
