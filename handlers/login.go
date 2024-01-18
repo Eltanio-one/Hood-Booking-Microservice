@@ -70,6 +70,7 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	session.SessionTokens[token] = matchedUser.ID
+	l.l.Println(session.SessionTokens[token])
 	session.StoreCookie(rw, token)
 	l.l.Println("User successfully logged in, welcome", matchedUser.Name)
 }

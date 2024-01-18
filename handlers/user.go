@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"bookings.com/m/data"
+	"bookings.com/m/session"
 )
 
 // create a Users struct to enable addition of a logger.
@@ -21,28 +22,31 @@ func NewUserHandler(l *log.Logger) *Users {
 	return &Users{l}
 }
 
-// ServeHTTP is called on a Bookings object.
+// ServeHTTP is called on a Users object.
 // It takes an http ResponseWriter and Request as parameters.
-// This function deals with all HTTP request methods that are queried.
+// This function deals with GET and PUT HTTP request methods that are queried, as POST methods are covered in the registration handler.
+// The session cookie that is generated and stored at login is retrieved here to authenticate the user before returning data client-side.
 func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
-		// token := session.AuthenticateToken(rw, r)
-		// if token == "" {
-		// 	http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
-		// 	return
-		// }
+		token := session.AuthenticateToken(rw, r)
+		if token == "" {
+			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
+			return
+		}
 		u.getUsers(rw, r)
 		return
 	}
 
-	// if r.Method == http.MethodPost {
-	// 	u.addUser(rw, r)
-	// 	return
-	// }
-
 	if r.Method == http.MethodPut {
 		u.l.Println("Handling PUT Request for user")
+
+		// authenticate cookie
+		token := session.AuthenticateToken(rw, r)
+		if token == "" {
+			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
+			return
+		}
 		// expect the ID in the URI
 		reg := regexp.MustCompile(`/([0-9]+)`)
 		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
@@ -87,20 +91,6 @@ func (u *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Unable to Marshal JSON", http.StatusInternalServerError)
 	}
 }
-
-// func (u *Users) addUser(rw http.ResponseWriter, r *http.Request) {
-// 	u.l.Println("Handling POST request for users")
-
-// 	usr := &data.User{}
-
-// 	err := usr.FromJSON(r.Body)
-// 	if err != nil {
-// 		http.Error(rw, "Unable to Marshal JSON", http.StatusBadRequest)
-// 	}
-
-// 	u.l.Printf("User: %#v", usr)
-// 	data.AddUser(usr)
-// }
 
 func (u *Users) updateUsers(id int, rw http.ResponseWriter, r *http.Request) {
 	u.l.Println("Handle PUT request for user")

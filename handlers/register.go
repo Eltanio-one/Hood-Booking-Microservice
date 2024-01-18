@@ -51,13 +51,13 @@ func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for missing data in registration request
-	if result := checkMissingValues(usr); result == false {
+	if result := checkMissingValues(usr); !result {
 		http.Error(rw, "Please ensure there is no missing data entered", http.StatusBadRequest)
 		return
 	}
 
 	// need to check user of same name doesn't exist
-	if nameCheck := checkExistingUser(usr); nameCheck == true {
+	if nameCheck := checkExistingUser(usr); nameCheck {
 		http.Error(rw, "A user with that name already exists, ensure you don't already have an account", http.StatusBadRequest)
 		return
 	}
@@ -87,7 +87,7 @@ func checkMissingValues(u *data.User) bool {
 	vals := reflect.ValueOf(u).Elem()
 
 	for i := 0; i < vals.NumField(); i++ {
-		if fieldValue := vals.Field(i); fieldValue.IsZero() == true {
+		if fieldValue := vals.Field(i); fieldValue.IsZero() {
 			count++
 		}
 	}
