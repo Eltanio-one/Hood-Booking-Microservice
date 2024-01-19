@@ -116,19 +116,19 @@ func (u *Users) updateUsers(id int, rw http.ResponseWriter, r *http.Request) {
 
 	ur := &data.User{}
 
+	// decode supplied data
 	err := ur.FromJSON(r.Body)
 	if err != nil {
 		http.Error(rw, "Unable to unmarshal JSON", http.StatusBadRequest)
+		return
 	}
 
-	err = data.UpdateUser(id, ur)
+	err = data.UpdateUser(rw, id, ur)
 	if err == data.ErrUserNotFound {
 		http.Error(rw, "User not found", http.StatusBadRequest)
 		return
 	}
 
-	if err != nil {
-		http.Error(rw, "User not found", http.StatusInternalServerError)
-		return
-	}
+	u.l.Println("Update complete!")
+
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
+	"reflect"
 )
 
 // User struct created with necessary information to identify each user.
@@ -60,19 +62,31 @@ func GetNextUserID() int {
 // UpdateUser takes a user ID and a User struct object as parameters and returns an error.
 // This function finds the position of the user in the UserList based on their ID, and assigns the passed id to the User struct object.
 // The User object at the position located during the function is then overwritten by the passed User parameter.
-func UpdateUser(id int, u *User) error {
-	_, pos, err := findUser(id)
+// TODO: currently all user info is overwritten apart from ID, so need to ensure that if no data was supplied in the PUT that the field is not changed.
+func UpdateUser(rw http.ResponseWriter, id int, u *User) error {
+	matchedUser, pos, err := findUser(id)
 	if err != nil {
 		return err
 	}
 
-	u.ID = id
+	// ensure user can only change their own data
+	if u.ID != id {
+		http.Error(rw, "Cannot edit another users data", http.StatusBadRequest)
+		return err
+	}
+
+	// ensure hash can't be changed
+	if u.Hash != "" {
+		http.Error(rw, "Unable to edit password hash", http.StatusBadRequest)
+		return err
+	}
+
+	// go through the data from the request, and any empty fields replace with the data currently stored before updating the userList.
+	replaceEmptyFields(matchedUser, u)
+
 	UserList[pos] = u
 	return err
 }
-
-// create structured error
-var ErrUserNotFound = fmt.Errorf("User Not Found")
 
 // findUser takes a user ID as a parameter and returns the corresponding User object, the position of this user in the UserList, and an error.
 // If no corresponding ID is found, the function returns the structured ErrUserNotFound alongside nil values for the other return values.
@@ -84,6 +98,25 @@ func findUser(id int) (*User, int, error) {
 	}
 	return nil, 0, ErrUserNotFound
 }
+
+// replaceEmptyFields takes two pointers to User struct objects.
+// One of these is pulled from the userList and contains the current data.
+// One contains data that has been passed by a user in a PUT request.
+// This function iterates over the fields of a User struct and ensures that any missing data the user does not want to change does not get overwritten.
+// This is done by replacing any empty fields with the data that is currently stored for that user.
+func replaceEmptyFields(stored *User, update *User) {
+	vals := reflect.ValueOf(update).Elem()
+
+	for i := 0; i < vals.NumField(); i++ {
+		if field := vals.Field(i); field.IsZero() {
+			currentField := reflect.ValueOf(stored).Elem().Field(i)
+			field.Set(currentField)
+		}
+	}
+}
+
+// create structured error
+var ErrUserNotFound = fmt.Errorf("User Not Found")
 
 // UserList is a temporary list of users used for testing purposes, that will be deprecated once a database is incorporated into this project.
 var UserList = UsersList{
