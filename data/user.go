@@ -36,7 +36,7 @@ func (u *User) FromJSON(r io.Reader) error {
 
 // ToJSON can be used on UsersList type objects.
 // It takes in an io.Writer parameter, and instantiates an encoder that writes to the io.Writer.
-// Uses the json encoder to encode the data stored in the io.Writer and store this data in the User object.
+// Uses the json encoder to encode the data stored in the User object to the io.Writer.
 func (u *UsersList) ToJSON(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	return enc.Encode(u)

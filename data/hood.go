@@ -34,7 +34,7 @@ func (h *Hood) FromJSON(r io.Reader) error {
 
 // ToJSON can be used on Hoods type variables.
 // It takes in an io.Writer parameter, and instantiates an encoder that writes to the io.Writer.
-// Uses the encoder to encode the data to the io.Writer which will then display the data in JSON format to the user.
+// Uses the json encoder to encode the data stored in the Hood object to the io.Writer.
 func (h *Hoods) ToJSON(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	return enc.Encode(h)

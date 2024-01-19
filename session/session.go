@@ -24,15 +24,9 @@ func AuthenticateToken(rw http.ResponseWriter, r *http.Request) string {
 		return ""
 	}
 	return token
-	// returnID := userTokenAuthentication(token)
-	// if ID == returnID {
-	// 	return true
-	// } else {
-	// 	return false
-	// }
 }
 
-func userTokenAuthentication(token string) int {
+func UserTokenAuthentication(token string) int {
 	id, ok := SessionTokens[token]
 	if ok {
 		return id

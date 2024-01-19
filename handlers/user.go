@@ -47,6 +47,7 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
 			return
 		}
+
 		// expect the ID in the URI
 		reg := regexp.MustCompile(`/([0-9]+)`)
 		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
@@ -68,6 +69,16 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		// convert to int
 		id, err := strconv.Atoi(idString)
 
+		// ensure the user can only update their own User object.
+		idCheck := session.UserTokenAuthentication(token)
+		if idCheck == -1 {
+			http.Error(rw, "Error whilst trying to retrieve matching user ID using token", http.StatusBadRequest)
+			return
+		} else if idCheck != id {
+			http.Error(rw, "Permission Denied, User IDs do not match", http.StatusBadRequest)
+			return
+		}
+
 		if err != nil {
 			u.l.Println("Invalid URI unable to convert ID to integer")
 			http.Error(rw, "Invalid URI", http.StatusBadRequest)
@@ -81,6 +92,10 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
+// getUsers is called on a Users tye object and takes an HTTP ResponseWriter and Request as parameters.
+// This function is involved in handling GET requests of all users.
+// Session cookies are authenticated before this function is executed in the ServeHTTP function.
+// The full userList is pulled using GetUsers and the data from this list is encoded into this struct.
 func (u *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
 	u.l.Println("Handling GET request for users")
 
@@ -92,6 +107,10 @@ func (u *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// updateUsers is called on Users type objects and takes the ID of the user to be updated as an int, and an HTTP ResponseWriter and Request as parameters.
+// This function is involved in handling PUT requests for users,
+// The data stored in the request body is decoded into a newly instantiated User struct object.
+// Using the UpdateUser function, the User with the corresponding ID is updated.
 func (u *Users) updateUsers(id int, rw http.ResponseWriter, r *http.Request) {
 	u.l.Println("Handle PUT request for user")
 
