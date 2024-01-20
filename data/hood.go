@@ -21,7 +21,7 @@ type HoodsList []*Hood
 // GetHoods returns the hoodlist above.
 // This hoodList is to be used as a test for HTTP requests while the database is not linked.
 func GetHoods() Hoods {
-	return hoodList
+	return HoodList
 }
 
 // FromJSON can be used on Hood struct objects.
@@ -44,13 +44,13 @@ func (h *Hoods) ToJSON(w io.Writer) error {
 // This function is used to collect the next available hood ID and assign this to the passed Hood object, before appending this hood object to the hoodList.
 func AddHood(h *Hood) {
 	h.ID = GetNextHoodID()
-	hoodList = append(hoodList, h)
+	HoodList = append(HoodList, h)
 }
 
 // GetNextHoodID returns the next available ID as an integer.
 // Using the length of the hoodList, it finds the ID of the last added booking and returns that value plus 1.
 func GetNextHoodID() int {
-	lastHood := hoodList[len(hoodList)-1]
+	lastHood := HoodList[len(HoodList)-1]
 	return lastHood.ID + 1
 }
 
@@ -78,7 +78,7 @@ func GetNextHoodID() int {
 // }
 
 // hoodList is a temporary list of users used for testing purposes, that will be deprecated once a database is incorporated into this project.
-var hoodList = Hoods{
+var HoodList = Hoods{
 	{
 		ID:          1,
 		Hood_Number: 101,

@@ -13,10 +13,10 @@ import (
 // the ID of the hood that was booked,
 // the time and date of the booking.
 type Booking struct {
-	ID             int       `json:"id"`
-	User_ID        int       `json:"user_id"`
-	Booked_Hood_ID int       `json:"booked_hood_id"`
-	Booking_Date   time.Time `json:"booking_time"`
+	ID          int       `json:"id"`
+	UserName    string    `json:"user_name"`
+	HoodNumber  int       `json:"hood_number"`
+	BookingDate time.Time `json:"booking_time"`
 }
 
 // BookingsList is a type defined to characterise an array of the Booking struct type variables.
@@ -26,7 +26,7 @@ type BookingsList []*Booking
 // GetBookings returns the bookinglist above.
 // This bookingList is to be used as a test for HTTP requests while the database is not linked.
 func GetBookings() BookingsList {
-	return bookingList
+	return BookingList
 }
 
 // FromJSON can be used on Booking type variables.
@@ -49,28 +49,28 @@ func (b *BookingsList) ToJSON(w io.Writer) error {
 // The function calls a secondary helper function, GetNextBookingId, see below for details.
 func AddBooking(b *Booking) {
 	b.ID = GetNextBookingID()
-	bookingList = append(bookingList, b)
+	BookingList = append(BookingList, b)
 }
 
 // GetNextBookingID is used to find the next numerical ID number and returns an integer of that value.
 // Using the length of the bookingList, it finds the ID of the last added booking and returns that value plus 1.
 func GetNextBookingID() int {
-	lastBooking := bookingList[len(bookingList)-1]
+	lastBooking := BookingList[len(BookingList)-1]
 	return lastBooking.ID + 1
 }
 
 // bookingList is a temporary list of bookings used for testing purposes, that will be deprecated once a database is incorporated into this project.
-var bookingList = BookingsList{
+var BookingList = BookingsList{
 	{
-		ID:             1,
-		User_ID:        1,
-		Booked_Hood_ID: 1,
-		Booking_Date:   time.Now(),
+		ID:          1,
+		UserName:    "dan",
+		HoodNumber:  101,
+		BookingDate: time.Date(2022, time.January, 15, 0, 0, 0, 0, time.UTC),
 	},
 	{
-		ID:             2,
-		User_ID:        2,
-		Booked_Hood_ID: 2,
-		Booking_Date:   time.Now(),
+		ID:          2,
+		UserName:    "warren",
+		HoodNumber:  201,
+		BookingDate: time.Date(2022, time.January, 16, 0, 0, 0, 0, time.UTC),
 	},
 }

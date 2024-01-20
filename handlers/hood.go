@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"bookings.com/m/data"
+	"bookings.com/m/session"
 )
 
 // Hoods struct is created to enable dependency injection of a logger.
@@ -22,14 +23,27 @@ func NewHoodHandler(l *log.Logger) *Hoods {
 // ServeHTTP is called on a Hoods object.
 // It takes an http ResponseWriter and Request as parameters.
 // This function deals with all HTTP request methods that are queried, so far GET and POST requests are handled.
+// Before each request is handled, the session token is authenticated to ensure login has been performed.
 func (h *Hoods) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
+		token := session.RetrieveCookie(r)
+		if token == "" {
+			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
+			return
+		}
+
 		h.getHoods(rw, r)
 		return
 	}
 
 	if r.Method == http.MethodPost {
+		token := session.RetrieveCookie(r)
+		if token == "" {
+			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
+			return
+		}
+
 		h.addHood(rw, r)
 		return
 	}

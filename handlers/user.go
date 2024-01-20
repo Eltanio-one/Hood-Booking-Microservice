@@ -29,7 +29,7 @@ func NewUserHandler(l *log.Logger) *Users {
 func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
-		token := session.AuthenticateToken(rw, r)
+		token := session.RetrieveCookie(r)
 		if token == "" {
 			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
 			return
@@ -42,7 +42,7 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		u.l.Println("Handling PUT Request for user")
 
 		// authenticate cookie
-		token := session.AuthenticateToken(rw, r)
+		token := session.RetrieveCookie(r)
 		if token == "" {
 			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
 			return
