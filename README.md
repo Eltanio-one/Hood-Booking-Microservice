@@ -61,4 +61,14 @@ Golang
 - Having created a separate session package, I plan to organise my handler/data packages in a similar way to aid with the organisation of my files and understanding.
 
 # Roadmap
-- [x] Complete user registration and login capabilities.
+- [x] Implement user registration and login capabilities.
+    - [x] Include session cookie creation and validation post-login.
+    - [x] Validate data entry upon POST requests.
+- [ ] Enable booking of a hood at a specific time:
+    - [x] Full-day booking.
+    - [ ] Specific time-slot booking.
+- [ ] Allow editing of bookings and deletion of bookings.
+- [ ] Reorganise packages to be centered around struct types.
+- [ ] Add unit tests for the microservice (currently only testing manually using Postman).
+- [ ] Create a database to host all data, and connect to the microservice.
+- [ ] Create a front-end for increased user experience and functionality.
