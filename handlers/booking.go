@@ -82,9 +82,6 @@ func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token str
 	if err != nil {
 		http.Error(rw, "Unable to Marshal JSON", http.StatusBadRequest)
 	}
-	b.l.Println(book.UserName)
-	b.l.Println(book.HoodNumber)
-	b.l.Println(book.BookingDate)
 
 	// TODO: check for missing values
 	if result := checkMissingValuesBooking(book); !result {
@@ -117,13 +114,9 @@ func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token str
 		return
 	}
 
-	b.l.Println("starting loop")
+	// verify hood and user are free at the booked time.
 	for _, booking := range data.BookingList {
-		b.l.Println(booking)
 		if booking.BookingDate.Equal(book.BookingDate) {
-			b.l.Println(booking.BookingDate.Equal(book.BookingDate))
-			b.l.Println(booking.BookingDate)
-			b.l.Println(book.BookingDate)
 			if booking.UserName == userName {
 				b.l.Printf("You are already booked into hood %d at the requested time!", booking.HoodNumber)
 				http.Error(rw, "Booking failed as previous booking exists at this time", http.StatusBadRequest)
@@ -141,6 +134,10 @@ func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token str
 	data.AddBooking(book)
 }
 
+// checkMissingValues ensures that the user has entered all required data for the booking.
+// The function takes the previously created Booking struct as a pointer.
+// The Booking struct is then dereferenced to allow the use of reflect.NumField() to calculate the number of fields within the struct.
+// If the count of missing values is 1, then no data is missing and the function returns true to enable continuation of the request.
 func checkMissingValuesBooking(b *data.Booking) bool {
 	var count int
 
@@ -154,6 +151,9 @@ func checkMissingValuesBooking(b *data.Booking) bool {
 	return count == 1
 }
 
+// getUserListPos takes an id as an int and returns an int.
+// This function is used to iterate over the UserList and return the position of the user with the matching ID in the userList.
+// If no matching ID is found, then -1 is returned.
 func getUserListPos(id int) int {
 	for i, u := range data.UserList {
 		if u.ID == id {
@@ -163,6 +163,8 @@ func getUserListPos(id int) int {
 	return -1
 }
 
+// checkHoodExists takes a hood number as an int and returns a bool.
+// This function is used to ensure that the hood number included in the users POST request exists.
 func checkHoodExists(hoodNumber int) bool {
 	for _, hood := range data.HoodList {
 		if hood.Hood_Number == hoodNumber {
