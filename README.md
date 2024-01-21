@@ -61,3 +61,4 @@ Golang
 - Having created a separate session package, I plan to organise my handler/data packages in a similar way to aid with the organisation of my files and understanding.
 
 # Roadmap
+- [x] Complete user registration and login capabilities.
