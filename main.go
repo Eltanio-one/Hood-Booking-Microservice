@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"bookings.com/m/handlers"
@@ -53,7 +54,7 @@ func main() {
 	}()
 
 	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, os.Interrupt, os.Kill)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 
 	sig := <-signalChannel
 	l.Println("Server terminating, gracefully exiting", sig)

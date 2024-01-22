@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"bookings.com/m/data"
+	"bookings.com/m/database"
 	"bookings.com/m/session"
 )
 
@@ -26,6 +27,14 @@ func NewBookingHandler(l *log.Logger) *Bookings {
 // This function deals with all HTTP request methods that are queried.
 // Before each request is handled, the session token is authenticated to ensure login has been performed.
 func (b *Bookings) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+
+	// Initialise database connection
+	db, err := database.InitialiseConnection(b.l)
+	if err != nil {
+		b.l.Println("Database connection error", err)
+		return
+	}
+	defer db.Close()
 
 	if r.Method == http.MethodGet {
 		token := session.RetrieveCookie(r)
