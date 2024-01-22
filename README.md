@@ -16,6 +16,27 @@ The Hood Booking Microservice was created by Dan Haver, who can be contacted via
 ## Technologies
 Golang
 
+## Database Setup
+(ALERT: STILL IN DEVELOPMENT, TUTORIAL WILL BE UPDATED WHEN COMPLETED)
+
+This project is connected to a PostgreSQL database that is hosted in PgAdmin4. A sql file containing the CREATE TABLE commands is present in the code for this project, and below will show you how to execute these commands using **psql** to instantiate your tables ready for population.
+
+This tutorial assumes that you have created a server and relevant database within PgAdmin 4, in which you will have chosen a host (e.g. localhost), a port (e.g. 5432), a username, and a name for the database within your server. These will be used to initialise a connection via your command line with the database.
+
+- Open up your operating systems command line (terminal, powershell et)
+
+- Initialise a connection with your database.
+  
+``` psql -h your_host -p your_port -U your_username -d your_database ```
+
+- Enter the password that you created for the database when prompted.
+
+- Once a connection is initialised, execute the SQL commands using \i and the path to your sql file.
+
+  ``` \i path/to/sqlfile.sql ```
+
+- For good measure, check pgAdmin to ensure your tables have been created under the schema tab of your database!
+
 # Features
 
 ## Registration
