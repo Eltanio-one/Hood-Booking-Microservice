@@ -1,7 +1,7 @@
 # Hood Booking Microservice
 This project was created to allow easier booking of the laminar flow hoods for members of my research institute.
 Currently, we operate using an excel sheet which can easily be edited or lost/corrupted, and so it felt necessary to develop a more efficient and less easily corrupted solution.
-This project also stood as a first attempt at programming using Golang, which I have been learning through reading but had not put into practice with a projet.
+This project also stood as a first attempt at programming using Golang, which I have been learning through reading but had not put into practice with a project.
 Within this README are explanations of each file within the project, and also a roadmap that will set out future goals for this project which I will be continually working on.
 Currently I use Postman to send HTTP requests to this microservice as I have yet to design a front-end for increased usability, but as this project is a proof of concept I felt more inclined to ensure the back-end was fully functional before starting work on the front.
 I have currently designed this booking system to operate on a full-day booking system, but hope to implement specific timings soon.
