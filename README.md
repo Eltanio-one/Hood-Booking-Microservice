@@ -27,7 +27,7 @@ This tutorial assumes that you have created a server and relevant database withi
 
 - Initialise a connection with your database.
   
-``` psql -h your_host -p your_port -U your_username -d your_database ```
+  ``` psql -h your_host -p your_port -U your_username -d your_database ```
 
 - Enter the password that you created for the database when prompted.
 
