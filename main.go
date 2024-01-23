@@ -24,6 +24,8 @@ func main() {
 	bookingHandler := handlers.NewBookingHandler(l)
 
 	mux := http.NewServeMux()
+
+	// assign routes to handlers
 	mux.Handle("/register", regHandler)
 	mux.Handle("/login", loginHandler)
 	mux.Handle("/user", userHandler)
@@ -33,6 +35,7 @@ func main() {
 	mux.Handle("/booking", bookingHandler)
 	mux.Handle("/booking/", bookingHandler)
 
+	// instantiate server
 	srvr := &http.Server{
 		Addr:         "localhost:9090",
 		Handler:      mux,
@@ -42,7 +45,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// set up Goroutine for when the server starts
+	// set up Goroutine to asynchronously start the server in the background, allowing the main function to continue working.
 	go func() {
 		l.Println("Server starting on port 9090")
 
@@ -53,6 +56,7 @@ func main() {
 		}
 	}()
 
+	// create a channel that expects signals from the OS, namely interrupt signals used to terminate the server.
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 

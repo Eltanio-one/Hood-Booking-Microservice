@@ -18,6 +18,7 @@ type Registers struct {
 }
 
 // NewRegisterHandler takes a logger as a parameter and returns a Registers struct that is assigned that logger.
+// This function is used to generate the registration handler used in our main function to handle any requests on the registration url path specified in the mux.Handle function.
 // This function is used in the main() function to allow user registration.
 func NewRegisterHandler(l *log.Logger) *Registers {
 	return &Registers{l}
@@ -25,6 +26,7 @@ func NewRegisterHandler(l *log.Logger) *Registers {
 
 // ServeHTTP is called on Registers objects and takes an http ResponseWriter and Request as parameters.
 // For registration, only POST http requests are handled. An http.StatusMethodNotAllowed is passed to the ResponseWriter if any other request types are performed.
+// A database connection is initialised and the closure of the connection deferred until the function is returned (a request has been made).
 func (reg *Registers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	// Initialise database connection
@@ -43,13 +45,13 @@ func (reg *Registers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
-// register is called on Registers strut objects and takes an http ResponseWriter, http Request and the sql database connection as parameters.
+// register is called on Registers handler struct objects and takes an http ResponseWriter, http Request and the sql database connection as parameters.
 // This function is used to authenticate the data that is provided by the user during registration and then add the user to the userList to enable login.
 // In order, the data provided in the request body is decoded into a newly instantiated User object.
 // checkMissingValues ensure the user has no left any required field empty.
 // checkExistingUser ensures that a user with the same name doesn't already exist (due to the small number of people who will be using the API, using the name as an identifier is permissible).
 // hashPass hashes the users provided password using the bcrypt package.
-// The user is then added to the userList to enable authentication during login.
+// The user is then added to the users table of the database using the data.AddUser function.
 func (reg *Registers) register(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	reg.l.Println("Registering new user...")
 
@@ -113,11 +115,15 @@ func checkMissingValues(u *data.User) bool {
 	return count == 1
 }
 
-// checkExistingUser queries the UserList to make sure that a use wth the same name provided at registration doesn't exist.
+// checkExistingUser takes a User struct object and a sql DB connection as parameters, and returns a bool and an error.
+// queries the users table of the database to make sure that a use wth the same name provided at registration doesn't exist.
 // As there are a small and limited number of employees who would use this microservice, using name as an identifier of duplicate registrations is fair.
-// If a user with the same name as the one provided during the current registration request exists, true is returned.
+// The function gathers all usernames from the users table of the database.
+// Iterating over the rows returned by the query, the username of each row is compared to the name of the user passed as a parameter.
+// If the passed name matches any user, then true is returned which will halt the registration.
 func checkExistingUser(u *data.User, db *sql.DB) (bool, error) {
 
+	// query db for all usernames
 	userRows, err := db.Query("SELECT username FROM users;")
 	if err != nil {
 		return false, err

@@ -12,14 +12,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// create a Hoods struct to enable addition of a logger.
+// create a Hoods struct to enable dependency injection of a logger.
 type Logins struct {
 	l *log.Logger
 }
 
-// NewBookingHandler takes a logger object and returns a Bookings object.
-// The logger passed will be assigned to the Bookings object logger field.
-// This function is used in the main() function to return the Bookings handler that is required to pass to the created servemux.
+// NewBookingHandler takes a logger object and returns a Logins object.
+// The logger passed will be assigned to the Logins object logger field.
+// This function is used in the main() function to return the Bookings handler that is required to pass to the created servemux to handle http requests at the specified url path.
 func NewLoginHandler(l *log.Logger) *Logins {
 	return &Logins{l}
 }
@@ -62,7 +62,7 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	// Ensure the username exists within the userList
+	// Ensure the username exists within the database
 	matchedUser := checkUsername(usr.Name, db)
 	if matchedUser == nil {
 		http.Error(rw, "Invalid username", http.StatusBadRequest)
