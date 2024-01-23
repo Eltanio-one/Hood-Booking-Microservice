@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"reflect"
 
 	"bookings.com/m/data"
+	"bookings.com/m/database"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,22 +27,29 @@ func NewRegisterHandler(l *log.Logger) *Registers {
 // For registration, only POST http requests are handled. An http.StatusMethodNotAllowed is passed to the ResponseWriter if any other request types are performed.
 func (reg *Registers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
+	// Initialise database connection
+	db, err := database.InitialiseConnection(reg.l)
+	if err != nil {
+		reg.l.Println("Database connection error", err)
+		return
+	}
+	defer db.Close()
 	if r.Method == http.MethodPost {
-		reg.register(rw, r)
+		reg.register(rw, r, db)
 		return
 	}
 
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
-// register is called on Registers strut objects and takes an http ResponseWriter and Request as parameters.
+// register is called on Registers strut objects and takes an http ResponseWriter, http Request and the sql database connection as parameters.
 // This function is used to authenticate the data that is provided by the user during registration and then add the user to the userList to enable login.
 // In order, the data provided in the request body is decoded into a newly instantiated User object.
 // checkMissingValues ensure the user has no left any required field empty.
 // checkExistingUser ensures that a user with the same name doesn't already exist (due to the small number of people who will be using the API, using the name as an identifier is permissible).
 // hashPass hashes the users provided password using the bcrypt package.
 // The user is then added to the userList to enable authentication during login.
-func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
+func (reg *Registers) register(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	reg.l.Println("Registering new user...")
 
 	// attempt to decode request body into new user struct
@@ -57,8 +66,13 @@ func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// need to check user of same name doesn't exist
-	if nameCheck := checkExistingUser(usr); nameCheck {
+	nameCheck, err := checkExistingUser(usr, db)
+	if nameCheck {
 		http.Error(rw, "A user with that name already exists, ensure you don't already have an account", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		reg.l.Println(err)
 		return
 	}
 
@@ -71,7 +85,11 @@ func (reg *Registers) register(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// add new user to the UserList
-	data.AddUser(usr)
+	if err := data.AddUser(usr, db); err != nil {
+		reg.l.Println(err)
+		http.Error(rw, "Error adding user to database", http.StatusInternalServerError)
+		return
+	}
 
 	reg.l.Println("Registration complete!")
 }
@@ -97,13 +115,24 @@ func checkMissingValues(u *data.User) bool {
 // checkExistingUser queries the UserList to make sure that a use wth the same name provided at registration doesn't exist.
 // As there are a small and limited number of employees who would use this microservice, using name as an identifier of duplicate registrations is fair.
 // If a user with the same name as the one provided during the current registration request exists, true is returned.
-func checkExistingUser(u *data.User) bool {
-	for _, usr := range data.UserList {
-		if u.Name == usr.Name {
-			return true
+func checkExistingUser(u *data.User, db *sql.DB) (bool, error) {
+
+	userRows, err := db.Query("SELECT username FROM users")
+	if err != nil {
+		return false, err
+	}
+
+	for userRows.Next() {
+		var userTemp data.User
+		err := userRows.Scan(&userTemp.Name)
+		if err != nil {
+			return false, err
+		}
+		if u.Name == userTemp.Name {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 // hashPass takes in the user's inputted password, and returns a hashed version of the password and an error.

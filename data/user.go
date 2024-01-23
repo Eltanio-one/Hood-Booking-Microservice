@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,6 +26,8 @@ type UsersList []*User
 // GetUsers returns the temporary userlist.
 // This userList is to be used as a test for HTTP requests while a database is not incorporated into the project.
 func GetUsers() UsersList {
+	// TODO: query the db, convert sql rows to an array, return
+
 	return UserList
 }
 
@@ -46,17 +49,45 @@ func (u *UsersList) ToJSON(w io.Writer) error {
 
 // AddUser takes a User struct object as a parameter.
 // It calls the function GetNextUserID to collect the next available user ID and assign it to the passed User struct object.
-// The user object is appended to the UserList.
-func AddUser(u *User) {
-	u.ID = GetNextUserID()
-	UserList = append(UserList, u)
+// The user object is then inserted into the database.
+func AddUser(u *User, db *sql.DB) error {
+	u.ID = GetNextUserID(db)
+	if u.ID == -1 {
+		return ErrDBQueryError
+	}
+
+	// connect to database and user insert to add user object.
+	_, err := db.Exec("INSERT INTO users (id, username, passhash, email, emergency_telephone, research_group) VALUES ($1, $2, $3, $4, $5, $6)", u.ID, u.Name, u.Hash, u.Email, u.Emergency_Telephone, u.Research_Group)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetNextUserID is used to find the next numerical ID number and returns an integer of that value.
 // Using the length of the UserList, it finds the ID of the last added booking and returns that value plus 1.
-func GetNextUserID() int {
-	lastUser := UserList[len(UserList)-1]
-	return lastUser.ID + 1
+func GetNextUserID(db *sql.DB) int {
+	// TODO: query the length of the users rows
+	var maxID int
+	// db query
+	rows, err := db.Query("SELECT MAX(id) FROM users")
+	if err != nil {
+		return -1
+	}
+
+	// check if no rows found
+	if !rows.Next() {
+		if err = rows.Err(); err != nil {
+			if err == sql.ErrNoRows {
+				return 1
+			} else {
+				fmt.Println(err)
+				return -1
+			}
+		}
+	}
+	rows.Scan(&maxID)
+	return maxID + 1
 }
 
 // UpdateUser takes a user ID and a User struct object as parameters and returns an error.
@@ -116,7 +147,8 @@ func replaceEmptyFields(stored *User, update *User) {
 }
 
 // create structured error
-var ErrUserNotFound = fmt.Errorf("User Not Found")
+var ErrUserNotFound = fmt.Errorf("user not found")
+var ErrDBQueryError = fmt.Errorf("error querying database")
 
 // UserList is a temporary list of users used for testing purposes, that will be deprecated once a database is incorporated into this project.
 var UserList = UsersList{
