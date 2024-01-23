@@ -93,7 +93,7 @@ This tutorial assumes that you have created a server and relevant database withi
 - [ ] Add unit tests for the microservice (currently only testing manually using Postman).
 - [ ] Create a database to host all data, and connect to the microservice.
   - [x] Implement DB update for registration.
-  - [x] Implememt DB update for login.
+  - [x] Implement DB update for login.
   - [ ] Implement DB update for session token storage.
   - [ ] Implement DB updates for all GET requests.
   - [ ] Implement DB updates for all POST requests.
