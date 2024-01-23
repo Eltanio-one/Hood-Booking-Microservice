@@ -23,11 +23,25 @@ type User struct {
 // This is mainly used for defining the temporary userlist, and also in GET/PUT requests of the current registered users.
 type UsersList []*User
 
+var UserList UsersList
+
 // GetUsers returns the temporary userlist.
 // This userList is to be used as a test for HTTP requests while a database is not incorporated into the project.
-func GetUsers() UsersList {
+func GetUsers(db *sql.DB) UsersList {
 	// TODO: query the db, convert sql rows to an array, return
+	rows, err := db.Query("SELECT id, username, email, emergency_telephone, research_group FROM users;")
+	if err != nil {
+		return nil
+	}
 
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Emergency_Telephone, &user.Research_Group)
+		if err != nil {
+			return nil
+		}
+		UserList = append(UserList, &user)
+	}
 	return UserList
 }
 
@@ -149,23 +163,3 @@ func replaceEmptyFields(stored *User, update *User) {
 // create structured error
 var ErrUserNotFound = fmt.Errorf("user not found")
 var ErrDBQueryError = fmt.Errorf("error querying database")
-
-// UserList is a temporary list of users used for testing purposes, that will be deprecated once a database is incorporated into this project.
-var UserList = UsersList{
-	{
-		ID:                  1,
-		Name:                "Dan Haver",
-		Hash:                "test123",
-		Email:               "dan.haver@ANRI.net",
-		Emergency_Telephone: 07712345677,
-		Research_Group:      "Immunotherapy",
-	},
-	{
-		ID:                  2,
-		Name:                "Warren Patterson",
-		Hash:                "test321",
-		Email:               "warren.patterson@ANRI.net",
-		Emergency_Telephone: 07727654323,
-		Research_Group:      "Immunogenetics",
-	},
-}

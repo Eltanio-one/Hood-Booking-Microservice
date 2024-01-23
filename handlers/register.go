@@ -34,6 +34,7 @@ func (reg *Registers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
+
 	if r.Method == http.MethodPost {
 		reg.register(rw, r, db)
 		return
@@ -117,18 +118,18 @@ func checkMissingValues(u *data.User) bool {
 // If a user with the same name as the one provided during the current registration request exists, true is returned.
 func checkExistingUser(u *data.User, db *sql.DB) (bool, error) {
 
-	userRows, err := db.Query("SELECT username FROM users")
+	userRows, err := db.Query("SELECT username FROM users;")
 	if err != nil {
 		return false, err
 	}
 
 	for userRows.Next() {
-		var userTemp data.User
-		err := userRows.Scan(&userTemp.Name)
+		var user data.User
+		err := userRows.Scan(&user.Name)
 		if err != nil {
 			return false, err
 		}
-		if u.Name == userTemp.Name {
+		if u.Name == user.Name {
 			return true, nil
 		}
 	}

@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 
 	"bookings.com/m/data"
+	"bookings.com/m/database"
 	"bookings.com/m/session"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,8 +30,16 @@ func NewLoginHandler(l *log.Logger) *Logins {
 // For logins, only POST requests are permitted and handled.
 func (l *Logins) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
+	// Initialise database connection
+	db, err := database.InitialiseConnection(l.l)
+	if err != nil {
+		l.l.Println("Database connection error", err)
+		return
+	}
+	defer db.Close()
+
 	if r.Method == http.MethodPost {
-		l.login(rw, r)
+		l.login(rw, r, db)
 		return
 	}
 
@@ -40,7 +50,7 @@ func (l *Logins) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // This function handles logging in a user.
 // It calls various helper functions to authenticate provided data.
 // Once the user is authenticated, a session cookie is created and stored
-func (l *Logins) login(rw http.ResponseWriter, r *http.Request) {
+func (l *Logins) login(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	l.l.Println("Logging in...")
 
 	usr := &data.User{}
@@ -53,7 +63,7 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ensure the username exists within the userList
-	matchedUser := checkUsername(usr.Name)
+	matchedUser := checkUsername(usr.Name, db)
 	if matchedUser == nil {
 		http.Error(rw, "Invalid username", http.StatusBadRequest)
 		return
@@ -78,10 +88,20 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request) {
 // checekUsername takes a string containing the name provided during login.
 // If the name matches a name that is already stored in the userList, then this user is returned.
 // This allows checking of the hashed password with the password provided during the login.
-func checkUsername(name string) *data.User {
-	for _, user := range data.UserList {
+func checkUsername(name string, db *sql.DB) *data.User {
+	rows, err := db.Query("SELECT username, passhash FROM users;")
+	if err != nil {
+		return nil
+	}
+
+	for rows.Next() {
+		var user data.User
+		err := rows.Scan(&user.Name, &user.Hash)
+		if err != nil {
+			return nil
+		}
 		if user.Name == name {
-			return user
+			return &user
 		}
 	}
 	return nil

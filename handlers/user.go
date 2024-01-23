@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 
 	"bookings.com/m/data"
+	"bookings.com/m/database"
 	"bookings.com/m/session"
 )
 
@@ -34,7 +36,16 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, "Unable to retrieve cookie", http.StatusBadRequest)
 			return
 		}
-		u.getUsers(rw, r)
+
+		// Initialise database connection
+		db, err := database.InitialiseConnection(u.l)
+		if err != nil {
+			u.l.Println("Database connection error", err)
+			return
+		}
+		defer db.Close()
+
+		u.getUsers(rw, r, db)
 		return
 	}
 
@@ -96,10 +107,10 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // This function is involved in handling GET requests of all users.
 // Session cookies are authenticated before this function is executed in the ServeHTTP function.
 // The full userList is pulled using GetUsers and the data from this list is encoded into this struct.
-func (u *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
+func (u *Users) getUsers(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	u.l.Println("Handling GET request for users")
 
-	userList := data.GetUsers()
+	userList := data.GetUsers(db)
 
 	err := userList.ToJSON(rw)
 	if err != nil {
