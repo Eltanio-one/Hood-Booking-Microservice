@@ -111,12 +111,16 @@ func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token str
 		return
 	}
 
+	// the following two functions can be reworked once the database is connected, can get user ID verification via session token.
+	// and query the db with the user ID to get the relevant information to do booking checks, won't need position in list.
+	// get the position of the user in the userlist (deprecated once database connection added here).
 	pos := getUserListPos(idCheck)
 	if pos == -1 {
 		http.Error(rw, "User does not exist in the user list, consider registration", http.StatusBadRequest)
 		return
 	}
 
+	// ensure that the user booking is the same as the user being booked for (also depracated once session tokens added).
 	userName := data.UserList[pos].Name
 	if userName != book.UserName {
 		http.Error(rw, "Currently cannot book a hood for another user", http.StatusBadRequest)

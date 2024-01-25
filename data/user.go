@@ -70,7 +70,7 @@ func AddUser(u *User, db *sql.DB) error {
 		return ErrDBQueryError
 	}
 
-	// connect to database and user insert to add user object.
+	// Add user object to database.
 	_, err := db.Exec("INSERT INTO users (id, username, passhash, email, emergency_telephone, research_group) VALUES ($1, $2, $3, $4, $5, $6)", u.ID, u.Name, u.Hash, u.Email, u.Emergency_Telephone, u.Research_Group)
 	if err != nil {
 		return err

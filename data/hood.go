@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+// Hoods is a type defined to characterise an array of the User struct type variables.
+// This is mainly used for defining the temporary hoodlist, and also in GET/PUT requests of the current registered hoods.
 type Hoods []*Hood
 
 // Hood struct created with necessary information to identify each hood.
@@ -13,10 +15,6 @@ type Hood struct {
 	Hood_Number int    `json:"hood_number"`
 	Room        string `json:"room"`
 }
-
-// HoodsList is a type defined to characterise an array of the User struct type variables.
-// This is mainly used for defining the temporary hoodlist, and also in GET/PUT requests of the current registered hoods.
-type HoodsList []*Hood
 
 // GetHoods returns the hoodlist above.
 // This hoodList is to be used as a test for HTTP requests while the database is not linked.

@@ -12,14 +12,14 @@ import (
 	"bookings.com/m/session"
 )
 
-// create a Users struct to enable addition of a logger.
+// create a Users struct to enable addition of a logger and to be used as a handler (http.handler) struct.
 type Users struct {
 	l *log.Logger
 }
 
-// NewBookingHandler takes a logger object and returns a Bookings object.
-// The logger passed will be assigned to the Bookings object logger field.
-// This function is used in the main() function to return the Bookings handler that is required to pass to the created servemux.
+// NewBookingHandler takes a logger object and returns a User object.
+// The logger passed will be assigned to the Users object logger field.
+// This function is used in the main() function to return the Users handler that is required to pass to the created servemux and handle relevant http requests on the passed url path.
 func NewUserHandler(l *log.Logger) *Users {
 	return &Users{l}
 }
