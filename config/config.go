@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// define the config struct, which has integrated structs to be used in JSON format when read.
 type Config struct {
 	Database struct {
 		Host     string `json:"host"`

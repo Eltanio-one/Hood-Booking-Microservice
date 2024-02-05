@@ -63,6 +63,8 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		reg := regexp.MustCompile(`/([0-9]+)`)
 		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
 
+		u.l.Println(g)
+
 		// ensure only one ID has been returned
 		if len(g) != 1 {
 			u.l.Println("Invalid URI more than one ID")
