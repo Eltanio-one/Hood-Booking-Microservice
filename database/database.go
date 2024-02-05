@@ -32,3 +32,5 @@ func InitialiseConnection(l *log.Logger) (*sql.DB, error) {
 	l.Println("Database Connection Successful!")
 	return db, nil
 }
+
+var ErrDBQueryError = fmt.Errorf("error querying database")

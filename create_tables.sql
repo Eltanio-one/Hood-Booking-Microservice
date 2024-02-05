@@ -12,7 +12,7 @@ CREATE TABLE users (
 CREATE TABLE hoods (
     id SERIAL PRIMARY KEY,
     hood_number INT NOT NULL,
-    room INT NOT NULL
+    room VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE bookings (

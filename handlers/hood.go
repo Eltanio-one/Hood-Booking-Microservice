@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"bookings.com/m/data"
+	"bookings.com/m/database"
 	"bookings.com/m/session"
 )
 
@@ -33,7 +36,15 @@ func (h *Hoods) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.getHoods(rw, r)
+		// Initialise database connection
+		db, err := database.InitialiseConnection(h.l)
+		if err != nil {
+			h.l.Println("Database connection error", err)
+			return
+		}
+		defer db.Close()
+
+		h.getHoods(rw, r, db)
 		return
 	}
 
@@ -44,7 +55,15 @@ func (h *Hoods) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.addHood(rw, r)
+		// Initialise database connection
+		db, err := database.InitialiseConnection(h.l)
+		if err != nil {
+			h.l.Println("Database connection error", err)
+			return
+		}
+		defer db.Close()
+
+		h.addHood(rw, r, db)
 		return
 	}
 
@@ -54,11 +73,11 @@ func (h *Hoods) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // getHoods is called on a Hoods object and takes an http ResponseWriter and Request as parameters.
 // This function is responsible for handling GET requests for Hoods.
 // It calls functions "GetHoods" and "ToJSON" from the booking data file to retrieve and encode the data to be presented to the user.
-func (h *Hoods) getHoods(rw http.ResponseWriter, r *http.Request) {
+func (h *Hoods) getHoods(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	h.l.Println("Handling GET request for hoods")
 
 	// retrieve hoodList
-	hoodList := data.GetHoods()
+	hoodList := data.GetHoods(db)
 
 	// encode data
 	err := hoodList.ToJSON(rw)
@@ -71,16 +90,16 @@ func (h *Hoods) getHoods(rw http.ResponseWriter, r *http.Request) {
 // This function is responsible for handling POST requests for Hoods.
 // It calls the function "FromJSON" from the Hood data file to decode the data being passed by the user.
 // The decoded data is then passed to the function AddHood from the Hood data file to add the file to the hoodList.
-func (h *Hoods) addHood(rw http.ResponseWriter, r *http.Request) {
+func (h *Hoods) addHood(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	h.l.Println("Handling POST request for hoods")
 
 	hd := &data.Hood{}
 
-	err := hd.FromJSON(r.Body)
-	if err != nil {
-		http.Error(rw, "Unable to Marshal JSON", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(hd); err != nil {
+		http.Error(rw, "Unable to unmarshal JSON", http.StatusBadRequest)
+		return
 	}
 
 	h.l.Printf("Hood: %#v", hd)
-	data.AddHood(hd)
+	data.AddHood(hd, db)
 }

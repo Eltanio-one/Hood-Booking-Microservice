@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+
+	"bookings.com/m/database"
 )
 
 // User struct created with necessary information to identify each user.
@@ -28,7 +30,6 @@ var UserList UsersList
 // GetUsers returns the temporary userlist.
 // This userList is to be used as a test for HTTP requests while a database is not incorporated into the project.
 func GetUsers(db *sql.DB) UsersList {
-	// TODO: query the db, convert sql rows to an array, return
 	rows, err := db.Query("SELECT id, username, email, emergency_telephone, research_group FROM users;")
 	if err != nil {
 		return nil
@@ -67,7 +68,7 @@ func (u *UsersList) ToJSON(w io.Writer) error {
 func AddUser(u *User, db *sql.DB) error {
 	u.ID = GetNextUserID(db)
 	if u.ID == -1 {
-		return ErrDBQueryError
+		return database.ErrDBQueryError
 	}
 
 	// Add user object to database.
@@ -81,10 +82,9 @@ func AddUser(u *User, db *sql.DB) error {
 // GetNextUserID is used to find the next numerical ID number and returns an integer of that value.
 // Using the length of the UserList, it finds the ID of the last added booking and returns that value plus 1.
 func GetNextUserID(db *sql.DB) int {
-	// TODO: query the length of the users rows
 	var maxID int
 	// db query
-	rows, err := db.Query("SELECT MAX(id) FROM users")
+	rows, err := db.Query("SELECT MAX(id) FROM users;")
 	if err != nil {
 		return -1
 	}
@@ -162,4 +162,3 @@ func replaceEmptyFields(stored *User, update *User) {
 
 // create structured error
 var ErrUserNotFound = fmt.Errorf("user not found")
-var ErrDBQueryError = fmt.Errorf("error querying database")
