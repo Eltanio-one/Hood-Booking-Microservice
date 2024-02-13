@@ -50,6 +50,15 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPut {
+
+		// Initialise database connection
+		db, err := database.InitialiseConnection(u.l)
+		if err != nil {
+			u.l.Println("Database connection error", err)
+			return
+		}
+		defer db.Close()
+
 		u.l.Println("Handling PUT Request for user")
 
 		// authenticate cookie

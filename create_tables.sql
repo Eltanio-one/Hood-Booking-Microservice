@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS users, hoods, bookings;
+DROP TABLE IF EXISTS users, hoods, bookings, sessiontokens;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -21,3 +21,10 @@ CREATE TABLE bookings (
     hoodnumber INT NOT NULL,
     booking_date TIMESTAMP WITH TIME ZONE
 );
+
+CREATE TABLE sessiontokens (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(255) NOT NULL,
+    id INT NOT NULL
+);
+

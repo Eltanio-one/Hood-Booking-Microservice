@@ -121,27 +121,3 @@ var ErrHoodNotFound = fmt.Errorf("Hood Not Found")
 // 	}
 // 	return nil, 0, ErrHoodNotFound
 // }
-
-// hoodList is a temporary list of users used for testing purposes, that will be deprecated once a database is incorporated into this project.
-// var HoodList = Hoods{
-// 	{
-// 		ID:          1,
-// 		Hood_Number: 101,
-// 		Room:        "AN201",
-// 	},
-// 	{
-// 		ID:          2,
-// 		Hood_Number: 102,
-// 		Room:        "AN201",
-// 	},
-// 	{
-// 		ID:          3,
-// 		Hood_Number: 103,
-// 		Room:        "AN202",
-// 	},
-// 	{
-// 		ID:          4,
-// 		Hood_Number: 104,
-// 		Room:        "AN202",
-// 	},
-// }
