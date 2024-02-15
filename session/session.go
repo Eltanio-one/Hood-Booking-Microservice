@@ -2,14 +2,17 @@ package session
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"net/http"
 	"time"
+
+	"bookings.com/m/data"
 )
 
 // create a map to store tokens in.
 // This is not the safest option, but for this proof of concept works well for verifying that a user has their own token being passed.
-var SessionTokens = make(map[string]int)
+// var SessionTokens = make(map[string]int)
 
 // GenerateSecureToken takes in a length (desired length of secure token) as an int and returns a string and an error.
 // a slice of bytes of the given length is instantiated.
@@ -26,12 +29,25 @@ func GenerateSecureToken(length int) (string, error) {
 // UserTokenAuthentication takes a token as a string and returns an int.
 // This function is used to ensure that the user attempting a PUT http request is editing their own user object and not someone elses.
 // The verification of the ID is performed in the relevant handler file on the ID that is returned from this function.
-func UserTokenAuthentication(token string) int {
-	id, ok := SessionTokens[token]
-	if ok {
-		return id
+func UserTokenAuthentication(token string, db *sql.DB) int {
+	// Query the db for the token, if present return the id, otherwise return -1
+
+	rows, err := db.Query("SELECT user_id FROM sessiontokens WHERE token = $1;", token)
+	if err != nil {
+		return -1
+	}
+
+	for rows.Next() {
+		var user data.User
+		err := rows.Scan(&user.ID)
+		if err != nil {
+			return -1
+		} else {
+			return user.ID
+		}
 	}
 	return -1
+
 }
 
 // StoreCookie takes an HTTP ResponseWriter and a token as a string as parameters.

@@ -79,8 +79,22 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(rw, "Failed to generate secure token", http.StatusBadRequest)
 		return
 	}
-	session.SessionTokens[token] = matchedUser.ID
-	l.l.Println(session.SessionTokens[token])
+
+	// clear sessiontokens table (should be done in logout, not yet implemented) to avoid pkey error
+	_, err = db.Exec("DELETE FROM sessiontokens WHERE user_id = $1;", matchedUser.ID)
+	if err != nil {
+		http.Error(rw, "Failed to clear previously stored token", http.StatusBadRequest)
+		return
+	}
+
+	// Add session token to the database, not the local storage
+	_, err = db.Exec("INSERT INTO sessiontokens (token, user_id) VALUES ($1, $2);", token, matchedUser.ID)
+	if err != nil {
+		http.Error(rw, "Failed to store secure token in database", http.StatusBadRequest)
+		return
+	}
+
+	// Store cookie in Postman
 	session.StoreCookie(rw, token)
 	l.l.Println("User successfully logged in, welcome", matchedUser.Name)
 }
@@ -89,14 +103,14 @@ func (l *Logins) login(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 // If the name matches a name that is already stored in the userList, then this user is returned.
 // This allows checking of the hashed password with the password provided during the login.
 func checkUsername(name string, db *sql.DB) *data.User {
-	rows, err := db.Query("SELECT username, passhash FROM users;")
+	rows, err := db.Query("SELECT id, username, passhash FROM users;")
 	if err != nil {
 		return nil
 	}
 
 	for rows.Next() {
 		var user data.User
-		err := rows.Scan(&user.Name, &user.Hash)
+		err := rows.Scan(&user.ID, &user.Name, &user.Hash)
 		if err != nil {
 			return nil
 		}

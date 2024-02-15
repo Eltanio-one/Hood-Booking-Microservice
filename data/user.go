@@ -108,40 +108,49 @@ func GetNextUserID(db *sql.DB) int {
 // This function finds the position of the user in the UserList based on their ID, and assigns the passed id to the User struct object.
 // The User object at the position located during the function is then overwritten by the passed User parameter.
 // TODO: currently all user info is overwritten apart from ID, so need to ensure that if no data was supplied in the PUT that the field is not changed.
-func UpdateUser(rw http.ResponseWriter, id int, u *User) error {
-	matchedUser, pos, err := findUser(id)
+func UpdateUser(rw http.ResponseWriter, id int, u *User, db *sql.DB) {
+	// TODO: update findUser to query db
+	matchedUser, err := findUser(id, db)
 	if err != nil {
-		return err
-	}
-
-	// ensure user can only change their own data
-	if u.ID != id {
-		http.Error(rw, "Cannot edit another users data", http.StatusBadRequest)
-		return err
+		http.Error(rw, "User not found", http.StatusBadRequest)
+		return
 	}
 
 	// ensure hash can't be changed
 	if u.Hash != "" {
 		http.Error(rw, "Unable to edit password hash", http.StatusBadRequest)
-		return err
+		return
 	}
 
 	// go through the data from the request, and any empty fields replace with the data currently stored before updating the userList.
 	replaceEmptyFields(matchedUser, u)
 
-	UserList[pos] = u
-	return err
+	// update database entry for the user, not local storage
+	_, err = db.Exec("UPDATE users SET username = $1, email = $2, emergency_telephone = $3, research_group = $4 WHERE id = $5;", u.Name, u.Email, u.Emergency_Telephone, u.Research_Group, id)
+	if err != nil {
+		http.Error(rw, "Error updating user database record", http.StatusBadRequest)
+		return
+	}
 }
 
 // findUser takes a user ID as a parameter and returns the corresponding User object, the position of this user in the UserList, and an error.
 // If no corresponding ID is found, the function returns the structured ErrUserNotFound alongside nil values for the other return values.
-func findUser(id int) (*User, int, error) {
-	for i, u := range UserList {
-		if u.ID == id {
-			return u, i, nil
+func findUser(id int, db *sql.DB) (*User, error) {
+	// query db for user
+	rows, err := db.Query("SELECT id, username, passhash, email, emergency_telephone, research_group FROM users WHERE id = $1;", id)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	var user User
+
+	for rows.Next() {
+		err := rows.Scan(&user.ID, &user.Name, &user.Hash, &user.Email, &user.Emergency_Telephone, &user.Research_Group)
+		if err != nil {
+			return nil, ErrUserNotFound
 		}
 	}
-	return nil, 0, ErrUserNotFound
+	return &user, nil
 }
 
 // replaceEmptyFields takes two pointers to User struct objects.

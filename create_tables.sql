@@ -25,6 +25,6 @@ CREATE TABLE bookings (
 CREATE TABLE sessiontokens (
     id SERIAL PRIMARY KEY,
     token VARCHAR(255) NOT NULL,
-    id INT NOT NULL
+    user_id INT NOT NULL
 );
 

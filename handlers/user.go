@@ -92,7 +92,7 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(idString)
 
 		// ensure the user can only update their own User object.
-		idCheck := session.UserTokenAuthentication(token)
+		idCheck := session.UserTokenAuthentication(token, db)
 		if idCheck == -1 {
 			http.Error(rw, "Error whilst trying to retrieve matching user ID using token", http.StatusBadRequest)
 			return
@@ -107,7 +107,7 @@ func (u *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		u.updateUsers(id, rw, r)
+		u.updateUsers(id, rw, r, db)
 
 	}
 
@@ -133,7 +133,7 @@ func (u *Users) getUsers(rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 // This function is involved in handling PUT requests for users,
 // The data stored in the request body is decoded into a newly instantiated User struct object.
 // Using the UpdateUser function, the User with the corresponding ID is updated.
-func (u *Users) updateUsers(id int, rw http.ResponseWriter, r *http.Request) {
+func (u *Users) updateUsers(id int, rw http.ResponseWriter, r *http.Request, db *sql.DB) {
 	u.l.Println("Handle PUT request for user")
 
 	ur := &data.User{}
@@ -145,11 +145,7 @@ func (u *Users) updateUsers(id int, rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = data.UpdateUser(rw, id, ur)
-	if err == data.ErrUserNotFound {
-		http.Error(rw, "User not found", http.StatusBadRequest)
-		return
-	}
+	data.UpdateUser(rw, id, ur, db)
 
 	u.l.Println("Update complete!")
 

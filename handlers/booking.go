@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"reflect"
@@ -55,7 +56,7 @@ func (b *Bookings) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		b.addBooking(rw, r, token)
+		b.addBooking(rw, r, token, db)
 		return
 	}
 
@@ -82,7 +83,8 @@ func (b *Bookings) getBookings(rw http.ResponseWriter, r *http.Request) {
 // This function is responsible for handling POST requests for bookings.
 // It calls the function "FromJSON" from the booking data file to decode the data being passed by the user.
 // The decoded data is then passed to the function AddBooking from the booking data file to add the file to the bookingList.
-func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token string) {
+func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token string, db *sql.DB) {
+
 	b.l.Println("Handling POST request")
 
 	book := &data.Booking{}
@@ -99,7 +101,7 @@ func (b *Bookings) addBooking(rw http.ResponseWriter, r *http.Request, token str
 	}
 
 	// TODO: Ensure that ID value from `SessionTokens` token key matches the ID the user is trying to book for.
-	idCheck := session.UserTokenAuthentication(token)
+	idCheck := session.UserTokenAuthentication(token, db)
 	if idCheck == -1 {
 		http.Error(rw, "Error whilst trying to retrieve matching user ID using token", http.StatusBadRequest)
 		return
